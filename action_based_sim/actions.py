@@ -10,9 +10,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Tuple
 
-from gorilla_sim.config import SimulationConfig
-from gorilla_sim.state import State
-from gorilla_sim.tables import ACTORS, CHECK_MECHANISMS, is_check_legal
+from action_based_sim.config import SimulationConfig
+from action_based_sim.state import State
+from action_based_sim.tables import ACTORS, CHECK_MECHANISMS, is_check_legal
 
 
 class ActionType(Enum):

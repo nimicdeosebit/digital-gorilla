@@ -6,13 +6,13 @@ from collections import deque
 from statistics import mean
 from typing import List
 
-from gorilla_sim import actions as actions_module
-from gorilla_sim import events, metrics, policies
-from gorilla_sim.actions import ActionType
-from gorilla_sim.actor import Actor
-from gorilla_sim.config import SimulationConfig
-from gorilla_sim.state import State
-from gorilla_sim.tables import ACTORS
+from action_based_sim import actions as actions_module
+from action_based_sim import events, metrics, policies
+from action_based_sim.actions import ActionType
+from action_based_sim.actor import Actor
+from action_based_sim.config import SimulationConfig
+from action_based_sim.state import State
+from action_based_sim.tables import ACTORS
 
 
 class Environment:

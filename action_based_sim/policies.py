@@ -8,9 +8,9 @@ threshold, it checks it. Otherwise it grows its own priority modality, or abstai
 import random
 from typing import List, Optional, Tuple
 
-from gorilla_sim.actions import Action, ActionType
-from gorilla_sim.config import SimulationConfig
-from gorilla_sim.state import State
+from action_based_sim.actions import Action, ActionType
+from action_based_sim.config import SimulationConfig
+from action_based_sim.state import State
 
 
 def _most_concentrated_above_threshold(

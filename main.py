@@ -1,7 +1,7 @@
 """This is a baseline run. Unvalidated, therefore should be treated as provisional."""
 
-from gorilla_sim.config import SimulationConfig
-from gorilla_sim.environment import Environment
+from action_based_sim.config import SimulationConfig
+from action_based_sim.environment import Environment
 
 
 def main():

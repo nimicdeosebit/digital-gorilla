@@ -3,9 +3,9 @@
 import random
 from typing import Optional
 
-from gorilla_sim.config import SimulationConfig
-from gorilla_sim.state import State
-from gorilla_sim.tables import SHOCKS
+from action_based_sim.config import SimulationConfig
+from action_based_sim.state import State
+from action_based_sim.tables import SHOCKS
 
 
 def maybe_fire_shock(state: State, config: SimulationConfig, rng: random.Random) -> Optional[dict]:

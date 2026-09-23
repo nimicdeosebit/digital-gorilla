@@ -3,7 +3,7 @@
 import copy
 from typing import Dict
 
-from gorilla_sim.tables import INITIAL_LEGITIMACY, INITIAL_POWER
+from action_based_sim.tables import INITIAL_LEGITIMACY, INITIAL_POWER
 
 
 class State:

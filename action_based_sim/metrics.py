@@ -3,8 +3,8 @@ Normalizations are provisional, they don't retune before validation."""
 
 from statistics import mean
 
-from gorilla_sim.state import State
-from gorilla_sim.tables import MODALITIES
+from action_based_sim.state import State
+from action_based_sim.tables import MODALITIES
 
 _MIN_HHI = 0.25  # perfectly balanced across 4 actors
 _MAX_HHI = 1.00  # single actor holds everything
