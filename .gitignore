@@ -6,3 +6,5 @@ figures/
 *.aux
 *.log
 *.out
+
+.venv/
