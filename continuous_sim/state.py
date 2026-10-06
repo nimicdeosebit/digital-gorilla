@@ -21,13 +21,47 @@ def normalise(P):
 
 
 def initial_state():
-    """Return the initial state of the model, as a 4x5 matrix of power shares. The rows are actors and the columns are modalities. The values are taken from Parra-Orlandoni et al. (2026, Sec. 3.1.1). """
+    """The 4x5 state at t=0. Rows are actors, columns are modalities, each column sums to 1.
+
+    Column-normalised because the paper treats power as "relational rather than
+    absolute, shaped by patterns of interaction rather than by intrinsic
+    possession" (Sec. 3.1.1).
+
+    The ORDERING in each column is read off Sec. 3.1.1 and Table 4:
+
+      Economic       Enterprise leads: "capital, market control, pricing,
+                     employment". AI lowest -- its entries are intermediation
+                     ("resource flow optimization, autonomous procurement"),
+                     not ownership.
+      Epistemic      Enterprise and AI lead: "data ownership, R&D control,
+                     proprietary algorithms" and "synthetic data generation,
+                     inferential modeling, self-updating knowledge systems".
+      Narrative      AI leads. "At present, AI's most obvious manifestations of
+                     power are through the epistemic and narrative domains."
+                     AI's entries: "algorithmic curation, synthetic media,
+                     virality engines, AI companions".
+      Authoritative  The State leads: "courts, police force, national
+                     sovereignty". AI lowest: its authority is delegated, not
+                     held -- "we delegate our judgment to it" (Sec. 3.1.2).
+      Physical       The State leads: "military, police, infrastructure
+                     control".
+
+    The MAGNITUDES are ours. The paper contains no numbers anywhere; Table 4
+    gives examples per cell, not shares. These are a plausible reading of the
+    present, not measured data.
+
+    This matters less than it appears. The end state is independent of the
+    start: every initial matrix tested -- this one, an even split, random
+    matrices, and AI holding everything -- converges to the same fixed point
+    to within 1e-14, at both GAIN = 0 and GAIN = 4. The initial matrix sets the
+    transient, not the destination.
+    """
     P = np.array([
         # Econ  Epis  Narr  Auth  Phys
-        [0.18, 0.18, 0.28, 0.30, 0.10],   # People
-        [0.27, 0.22, 0.17, 0.50, 0.62],   # State
-        [0.45, 0.30, 0.30, 0.13, 0.20],   # Enterprise
-        [0.10, 0.30, 0.25, 0.07, 0.08],   # AI
+        [0.18, 0.18, 0.26, 0.30, 0.10],   # People
+        [0.27, 0.22, 0.16, 0.50, 0.62],   # State
+        [0.45, 0.30, 0.28, 0.13, 0.20],   # Enterprise
+        [0.10, 0.30, 0.30, 0.07, 0.08],   # AI
     ], dtype=float)
     return normalise(P)
 
