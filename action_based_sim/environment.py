@@ -46,8 +46,8 @@ class Environment:
         self._volatility_window.append(total_moved)
 
         asp = metrics.aspiration(self.state)
-        stab = metrics.stability(
-            self.state,
+        stab = metrics.stability(self.state)
+        vol = metrics.volatility(
             recent_volatility=mean(self._volatility_window),
             recent_check_success_rate=mean(self._check_outcomes) if self._check_outcomes else 0.5,
         )
@@ -59,6 +59,7 @@ class Environment:
             "shock": shock["id"] if shock else None,
             "aspiration": asp,
             "stability": stab,
+            "volatility": vol,
             "quadrant": quadrant,
             "state": self.state.snapshot(),
         }

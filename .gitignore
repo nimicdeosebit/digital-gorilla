@@ -9,3 +9,5 @@ figures/
 
 .venv/
 results/
+# experiment output
+experiment_results.csv
