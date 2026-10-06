@@ -2,25 +2,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-from state import ACTORS, MODALITIES, N, EPIS, initial_state
+from state import ACTORS, MODALITIES, N, EPIS, AI, initial_state
 from agents import score, effort
 from contest import step
-from mechanisms import spillover
+from mechanisms import spillover, TARGET_SETS
 from metrics import aspiration, stability
-from config import ROUNDS, GAIN
+from config import ROUNDS, SPILLOVER_TARGETS, GAIN
 
-FIGDIR = Path("figures"); FIGDIR.mkdir(exist_ok=True)
+FIGDIR = Path(__file__).resolve().parent.parent / "figures"; FIGDIR.mkdir(exist_ok=True)
 BLUE, ORANGE, GREEN, PURPLE = "#2a78d6", "#eb6834", "#1baf7a", "#8c5ec4"
 GREY = "#cccccc"
 plt.rcParams.update({"font.size": 9, "axes.spines.top": False,
                      "axes.spines.right": False})
 
 
-def run(rule, gain=None):
+def run(rule, gain=None, targets=SPILLOVER_TARGETS):
     """One run. Scores are recomputed every round: capability depends on the state.
     gain=None uses GAIN from config; pass a number to sweep it."""
     P = initial_state()
-    F = (lambda P: score(P)) if gain is None else (lambda P: effort() * spillover(P, gain))
+    F = (lambda P: score(P)) if gain is None else (lambda P: effort() * spillover(P, gain, targets=targets))
     return np.array([(P := step(P, F(P), rule=rule)) for _ in range(ROUNDS)])
 
 
@@ -60,18 +60,37 @@ def fig_matrix(P, fname="fig3_matrix.png"):
     save(fig, fname)
 
 
-def fig_spillover(gains=(0, 1, 2, 4, 6, 8), fname="fig4_spillover.png"):
-    """What epistemic spillover does: each actor's mean share across the four
-    modalities the mechanism boosts (epistemic itself is excluded, since it is
-    unaffected by construction)."""
-    cols = [j for j in range(len(MODALITIES)) if j != EPIS]
-    ends = np.array([run("tullock", gain=g)[-1][:, cols].mean(axis=1) for g in gains])
+def fig_spillover(gains=(0, 1, 2, 4, 6, 8), fname="fig4_spillover.png",
+                  targets=SPILLOVER_TARGETS):
+    """Each actor's mean share across the modalities spillover boosts."""
+    cols = TARGET_SETS[targets]
+    ends = np.array([run("tullock", gain=g, targets=targets)[-1][:, cols].mean(axis=1)
+                     for g in gains])
     fig, ax = plt.subplots(figsize=(5, 3))
     for i, colour in enumerate((BLUE, ORANGE, GREEN, PURPLE)):
         ax.plot(gains, ends[:, i], "o-", ms=4, color=colour, lw=2, label=ACTORS[i])
     ax.axhline(1 / N, color=GREY, ls="--", lw=1)
-    ax.set(xlabel="spillover gain", ylabel="mean share, four boosted modalities")
+    ax.set(xlabel="spillover gain", ylabel=f"mean share, {targets} boosted modalities")
     ax.legend(frameon=False, ncol=2, fontsize=8)
+    save(fig, fname)
+
+
+def fig_targets(gains=np.arange(0, 12.01, 0.5), fname="fig5_targets.png"):
+    """Does the reading of one sentence change the conclusion?
+
+    AI's mean share across the four non-epistemic modalities, under both
+    readings of where spillover lands. Same columns averaged in both curves,
+    so the two are comparable.
+    """
+    cols = [j for j in range(len(MODALITIES)) if j != EPIS]
+    fig, ax = plt.subplots(figsize=(5, 3))
+    for colour, name, label in ((BLUE, "three", "three targets (paper's list)"),
+                                (ORANGE, "four", "four targets (incl. narrative)")):
+        ys = [run("tullock", gain=g, targets=name)[-1][AI, cols].mean() for g in gains]
+        ax.plot(gains, ys, color=colour, lw=2, label=label)
+    ax.axhline(1 / N, color=GREY, ls="--", lw=1)
+    ax.set(xlabel="spillover gain", ylabel="AI mean share (non-epistemic)")
+    ax.legend(frameon=False, fontsize=8)
     save(fig, fname)
 
 
@@ -82,3 +101,4 @@ if __name__ == "__main__":
                   ("replicator", run("replicator")[-1])])
     fig_matrix(run("tullock")[-1])
     fig_spillover()
+    fig_targets()
