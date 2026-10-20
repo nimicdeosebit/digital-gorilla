@@ -1,6 +1,10 @@
 import csv
+import sys
 from collections import Counter
+from pathlib import Path
 from statistics import mean, stdev
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from action_based_sim.config import SimulationConfig
 from action_based_sim.environment import Environment
@@ -8,7 +12,9 @@ from action_based_sim.tables import ACTORS, MODALITIES
 
 
 N_RUNS = 100
-OUTPUT_FILE = "experiment_results.csv"
+RESULTS = Path(__file__).resolve().parent.parent / "results" / "baseline"
+RESULTS.mkdir(parents=True, exist_ok=True)
+OUTPUT_FILE = RESULTS / "experiment_results.csv"
 
 
 def run_one(seed):

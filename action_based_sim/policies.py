@@ -16,8 +16,12 @@ from action_based_sim.state import State
 def _most_concentrated_above_threshold(
     state: State, candidates: List[Tuple[str, str]], threshold: float
 ) -> Optional[Tuple[str, str]]:
+    """Candidates naming an actor that is not in this run are skipped, so the
+    same policies work for the three-actor baseline without rewriting them."""
     best, best_share = None, threshold
     for target, modality in candidates:
+        if target not in state.actors:
+            continue
         share = state.P[modality][target]
         if share > best_share:
             best, best_share = (target, modality), share

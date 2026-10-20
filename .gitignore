@@ -1,13 +1,18 @@
+# Python build artefacts
 __pycache__/
 *.pyc
-.DS_Store
-figures/
+.venv/
 
+# macOS
+.DS_Store
+
+# LaTeX intermediates
 *.aux
 *.log
 *.out
+*.toc
+*.synctex.gz
 
-.venv/
-results/
-# experiment output
-experiment_results.csv
+# NOTE: figures/ is NOT ignored. The report needs those files, and a
+# previous version of this file excluded them, which meant none of them
+# reached GitHub.

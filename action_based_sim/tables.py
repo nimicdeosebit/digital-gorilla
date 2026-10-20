@@ -32,6 +32,31 @@ def is_check_legal(frm: str, to: str) -> bool:
     return frm != to and frm in ACTORS and to in ACTORS
 
 
+def initial_power_for(actors):
+    """INITIAL_POWER restricted to `actors`, each modality renormalised to 1.
+
+    Needed for the three-actor baseline. Dropping AI and renormalising spreads
+    AI's share over the remaining actors in proportion to what they already
+    hold, which keeps Table 4's ordering intact and adds no new assumption
+    about who would have held AI's share instead.
+    """
+    out = {}
+    for modality, shares in INITIAL_POWER.items():
+        kept = {a: shares[a] for a in actors}
+        total = sum(kept.values())
+        out[modality] = {a: v / total for a, v in kept.items()}
+    return out
+
+
+def initial_legitimacy_for(actors):
+    """INITIAL_LEGITIMACY restricted to `actors`.
+
+    Not renormalised: legitimacy is a per-actor property in Table 5, not a
+    share of a fixed pool.
+    """
+    return {a: INITIAL_LEGITIMACY[a] for a in actors}
+
+
 # Table 6 mechanisms, per (from, to). `weight` multiplies effect_magnitude
 # when that mechanism resolves a CHECK. Kept at 1.0 for now.
 CHECK_MECHANISMS = {

@@ -1,14 +1,3 @@
-"""Aspiration and stability, and the Table 8 quadrant.
-
-The paper puts these two on separate axes: the matrix is for "preserving both
-human flourishing (aspiration) and balanced power (stability)" (Sec. 5.1(b)).
-Balanced power is STABILITY, so the concentration measure belongs there and
-aspiration has to be about People.
-
-These definitions match the ones used in continuous_sim, so the two simulations
-can be compared.
-"""
-
 from statistics import mean
 
 from action_based_sim.state import State

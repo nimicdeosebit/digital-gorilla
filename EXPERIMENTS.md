@@ -1,134 +1,44 @@
 # Experiments
 
-This file documents experiments run on the action-based Digital Gorilla simulation.
+Every experiment has its own folder under `results/`, with the write-up beside
+the data it was computed from. [`results/README.md`](results/README.md) is the
+index to those folders.
 
-## Prototype baseline / validation run (SUPERSEDED - see below)
+## The research questions
 
-> The numbers in this run were produced with the old metric definitions, in
-> which `aspiration()` returned the concentration measure and `stability()`
-> did not use concentration at all. They are kept here as a record, but the
-> quadrant result is not meaningful. See the rerun below.
+**RQ1 — How strong does a check have to be?**
+The paper says checks and balances restrain whoever grows too strong, but never
+says how hard a check has to push. So: how strong must checking be, relative to
+a move that simply grows an actor's own power, before the People end up in the
+paper's High Potential quadrant?
+→ action model · [`results/rq1_check_threshold/`](results/rq1_check_threshold/rq1_check_threshold.md)
 
-### Purpose
+**RQ2 — Does AI as a fourth actor change anything?**
+The framework separates AI from Enterprises. Does that separation do any work,
+or is it the same system with one actor relabelled?
+→ both Python models · [`results/rq2_three_vs_four/`](results/rq2_three_vs_four/rq2_three_vs_four.md)
 
-Establish the default behaviour of the action-based simulation and measure how much results vary due to stochasticity alone.
+**RQ3 — Does it matter where power sits?**
+The aggregate models hold one number per kind of power, so power spread thinly
+everywhere looks identical to the same total piled into a few places. Do kinds
+of power that travel easily end up more evenly spread across localities than
+kinds that are bound to a place?
+→ NetLogo spatial model · [`results/rq3_spatial/`](results/rq3_spatial/rq3_spatial.md)
 
-### Configuration
+**RQ4 — Do the policy levers help?**
+The paper proposes interventions. Do they change who holds power, and can
+policy substitute for raw check strength?
+→ action model · [`results/rq4_levers/`](results/rq4_levers/rq4_levers.md)
 
-- Number of runs: 100
-- Seeds: 0-99
-- Ticks per run: 50
-- Effect magnitude: 0.10
-- Shock probability: 0.15
-- Concentration threshold: 0.45
-- Volatility window: 5
+## Supporting runs
 
-Only the random seed was changed between runs.
+These are not research questions. They establish what the models do before
+anything is varied, and test whether a simplification drives a result.
 
-### Reproducibility check
-
-Seed 42 was run twice using identical parameters.
-
-Result: both runs produced identical outputs, confirming reproducibility under a fixed seed.
-
-### Aggregated results
-
-- Mean aspiration: 0.718
-- Aspiration standard deviation: 0.054
-- Mean stability: 0.334
-- Stability standard deviation: 0.092
-
-Final quadrant frequencies:
-
-- Quadrant III - Creative Chaos: 95/100 runs (95%)
-- Quadrant II - High Potential: 5/100 runs (5%)
-
-### Mean final power shares
-
-| Modality | People | State | Enterprises | AI |
-|---|---:|---:|---:|---:|
-| Economic | 0.063 | 0.268 | 0.666 | 0.003 |
-| Epistemic | 0.011 | 0.012 | 0.529 | 0.448 |
-| Narrative | 0.212 | 0.074 | 0.104 | 0.610 |
-| Authoritative | 0.167 | 0.541 | 0.262 | 0.029 |
-| Physical | 0.200 | 0.581 | 0.199 | 0.020 |
-
-### Preliminary interpretation
-
-The default discrete model most often ends in Quadrant III. Across runs, Enterprises tend to dominate Economic power, Enterprises and AI dominate Epistemic power, AI tends to dominate Narrative power, and the State retains the largest shares of Authoritative and Physical power.
-
-These patterns should not yet be treated as robust conclusions, because several simulation parameters and actor policies are manually specified. Sensitivity analysis is required to determine how dependent the outcomes are on those assumptions.
-
-
----
-
-## Prototype baseline, rerun with corrected metrics
-
-### Why it was rerun
-
-The first run used `aspiration()` to return `1 - mean HHI`, which measures how
-evenly power is spread. The paper calls that stability, not aspiration:
-"preserving both human flourishing (aspiration) and balanced power (stability)".
-So the concentration measure was sitting under the wrong label, and nothing was
-measuring People.
-
-`aspiration()` is now People's mean share across the modalities, normalised so
-an even split gives 0.5. `stability()` is now the concentration measure, per
-modality and then averaged. Volatility and check success rate used to be folded
-into stability; they are now recorded separately as `volatility` and do not
-decide the quadrant.
-
-### Configuration
-
-Unchanged from the first run: 100 runs, seeds 0-99, 50 ticks, effect magnitude
-0.10, shock probability 0.15, concentration threshold 0.45, volatility window 5.
-Only the metric definitions changed.
-
-### Reproducibility check
-
-Seed 42 run twice, identical outputs.
-
-### Aggregated results
-
-| | before the fix | after the fix |
-|---|---:|---:|
-| Mean aspiration | 0.718 (sd 0.054) | **0.261** (sd 0.056) |
-| Mean stability | 0.334 (sd 0.092) | **0.718** (sd 0.054) |
-| Quadrant III - Creative Chaos | 95/100 | 0/100 |
-| Quadrant I - Surviving not Thriving | 0/100 | **100/100** |
-
-Note that the old aspiration and the new stability are the same number, 0.718
-with sd 0.054. That is the check that the fix did what it was supposed to: the
-quantity we were calling aspiration was the concentration measure all along, and
-it now carries the right name.
-
-### Mean final power shares
-
-Unchanged, since the metrics do not affect the simulation itself.
-
-| Modality | People | State | Enterprises | AI |
-|---|---:|---:|---:|---:|
-| Economic | 0.063 | 0.268 | 0.666 | 0.003 |
-| Epistemic | 0.011 | 0.012 | 0.529 | 0.448 |
-| Narrative | 0.212 | 0.074 | 0.104 | 0.610 |
-| Authoritative | 0.167 | 0.541 | 0.262 | 0.029 |
-| Physical | 0.200 | 0.581 | 0.199 | 0.020 |
-
-### Interpretation
-
-Every run now ends in Quadrant I, high stability and low aspiration, which the
-paper calls "Surviving not Thriving". This is a different story from the one the
-first run told. The system is not fragmenting; it holds together, but People end
-up with roughly a quarter of what an even share would be.
-
-This also agrees with the continuous simulation, which lands in Quadrant I as
-well, so the two models now say the same thing about where the system ends up
-even though they get there by completely different mechanics.
-
-The caution from the first run still applies, and more strongly. The end states
-are still driven by two choices in our own code: ENHANCE takes a share from all
-three other actors while CHECK takes from one and only on success, and
-Enterprises and AI never abstain while People and the State abstain most of the
-time. Enterprises at 0.666 in economic and AI at 0.610 in narrative is what two
-actors that grow every single round will produce. Until those are balanced, the
-end shares are not a result about the framework.
+| Run | Write-up |
+|---|---|
+| Baseline, corrected metrics | [`results/baseline/baseline.md`](results/baseline/baseline.md) |
+| Actor count, first pass | [`results/rq2_three_vs_four/actor_count_comparison.md`](results/rq2_three_vs_four/actor_count_comparison.md) |
+| Legitimacy robustness | [`results/robustness/legitimacy.md`](results/robustness/legitimacy.md) |
+| NetLogo against Python | [`results/validation/netlogo_cross_check.md`](results/validation/netlogo_cross_check.md) |
+| First prototype run (superseded) | [`results/baseline/superseded_first_run.md`](results/baseline/superseded_first_run.md) |
