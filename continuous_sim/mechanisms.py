@@ -49,7 +49,9 @@ def spillover(P, gain=GAIN, self_gain=SELF_GAIN, targets=SPILLOVER_TARGETS):
     replicator. Tested: it does not. The feedback is bounded, 1 + s*P with
     P <= 1, and the contest absorbs it.)
     """
-    C = np.ones((N, M))
+    # Shape is taken from P, not from the module constants, so the same
+    # mechanism works for a three-actor run with AI removed.
+    C = np.ones(P.shape)
     C[:, TARGET_SETS[targets]] = 1.0 + gain * P[:, EPIS][:, None]
     C[:, EPIS] = 1.0 + self_gain * P[:, EPIS]
     return C

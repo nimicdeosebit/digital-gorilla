@@ -1,4 +1,7 @@
-"""This is a baseline run. Unvalidated, therefore should be treated as provisional."""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from action_based_sim.config import SimulationConfig
 from action_based_sim.environment import Environment
