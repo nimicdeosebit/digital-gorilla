@@ -1,0 +1,990 @@
+<?xml version="1.0" encoding="utf-8"?>
+<model version="NetLogo 7.0.4" snapToGrid="false">
+  <code><![CDATA[globals [
+  actor-names
+  modality-names
+  base-power          ;; 5 modalities, each a list of 4 actor shares summing to 1
+  diffusion-rates     ;; one rate per modality
+  legitimacy          ;; one per actor, Table 5
+  shock-list          ;; Table 7, as (modality favoured disfavoured)
+  checks-against      ;; running count of checks received, per actor
+]
+
+breed [markers marker]   ;; one per patch: the icon of whoever is dominant there
+
+patches-own [
+  power               ;; 5 lists of 4; every inner list sums to 1
+  new-power           ;; scratch, so diffusion updates synchronously
+]
+
+;; Actor indices    0 People   1 State   2 Enterprises   3 AI
+;; Modality indices 0 Economic 1 Epistemic 2 Narrative 3 Authoritative 4 Physical
+;;
+;; Icons: People a figure, State a gavel, Enterprises a dollar sign, AI a
+;; robot. The patch behind each icon is a tint of that actor's colour, darker
+;; the more of the modality it holds.
+
+;; ===================================================================== setup
+
+to setup
+  clear-all
+  set actor-names ["People" "State" "Enterprises" "AI"]
+  set modality-names ["Economic" "Epistemic" "Narrative" "Authoritative" "Physical"]
+
+  ;; Table 4, read as numbers. Each row is one modality.
+  set base-power (list
+    [0.20 0.25 0.50 0.05]
+    [0.20 0.25 0.40 0.15]
+    [0.25 0.25 0.35 0.15]
+    [0.10 0.60 0.27 0.03]
+    [0.20 0.55 0.23 0.02])
+
+  set legitimacy [0.65 0.70 0.55 0.35]
+
+  ;; How far each modality reaches past the locality holding it, per tick.
+  ;; Information travels, jurisdiction does not.
+  ifelse uniform-diffusion?
+    [ set diffusion-rates [0.17 0.17 0.17 0.17 0.17] ]
+    [ set diffusion-rates [0.15 0.30 0.30 0.05 0.03] ]
+
+  set shock-list (list
+    (list 0 2 0)
+    (list 1 3 1)
+    (list 2 3 0)
+    (list 3 1 0)
+    (list 4 1 2))
+
+  set checks-against [0 0 0 0]
+
+  ask patches [
+    setup-patch
+    sprout-markers 1 [
+      set size 0.8
+      set shape "person"
+      set color black
+    ]
+  ]
+  recolour
+  reset-ticks
+  draw-quadrants
+end
+
+to setup-patch
+  ifelse heterogeneity > 0
+    [ set power map [ row -> normalise (map [ v -> v * (exp random-normal 0 heterogeneity) ] row) ] base-power ]
+    [ set power base-power ]
+  set new-power power
+end
+
+to-report normalise [ row ]
+  let s sum row
+  ifelse s > 0
+    [ report map [ v -> v / s ] row ]
+    [ report row ]
+end
+
+;; ====================================================================== main
+
+to go
+  local-actions
+  diffuse-power
+  maybe-shock
+  recolour
+  tick
+  if ticks >= max-ticks [ stop ]
+end
+
+to local-actions
+  ask patches [
+    resolve decide-people
+    resolve decide-state
+    resolve decide-enterprises
+    resolve decide-ai
+  ]
+end
+
+;; ================================================================ accessors
+
+to-report share [ m a ]
+  report item a (item m power)
+end
+
+to set-share [ m a v ]
+  set power replace-item m power (replace-item a (item m power) v)
+end
+
+to transfer [ m frm dst amt ]
+  let avail share m frm
+  let x amt
+  if x > avail [ set x avail ]
+  if x < 0 [ set x 0 ]
+  set-share m frm (avail - x)
+  set-share m dst ((share m dst) + x)
+end
+
+;; ================================================================= policies
+
+;; Each candidate is (target-actor modality). Returns (target modality) for
+;; the most concentrated one above the threshold, or an empty list.
+to-report hottest [ cands ]
+  let best-target -1
+  let best-mod -1
+  let best-share concentration-threshold
+  foreach cands [ c ->
+    let t item 0 c
+    let m item 1 c
+    if share m t > best-share [
+      set best-target t
+      set best-mod m
+      set best-share share m t
+    ]
+  ]
+  ifelse best-target = -1
+    [ report [] ]
+    [ report (list best-target best-mod) ]
+end
+
+;; An action is (kind modality target actor).
+
+to-report decide-people ;;evaluates and applies People’s move before the State decides. Python collects all four decisions first.
+  let hit hottest (list (list 2 0) (list 1 3) (list 3 2))
+  if not empty? hit [ report (list "CHECK" (item 1 hit) (item 0 hit) 0) ]
+  ifelse random-float 1 < 0.3
+    [ report (list "ENHANCE" 2 -1 0) ]
+    [ report (list "ABSTAIN" -1 -1 0) ]
+end
+
+to-report decide-state
+  let hit hottest (list (list 2 0) (list 3 1))
+  if not empty? hit [ report (list "CHECK" (item 1 hit) (item 0 hit) 1) ]
+  ifelse random-float 1 < 0.3
+    [ report (list "ENHANCE" 3 -1 1) ]
+    [ report (list "ABSTAIN" -1 -1 1) ]
+end
+
+to-report decide-enterprises
+  let hit hottest (list (list 3 0))
+  if not empty? hit [ report (list "CHECK" (item 1 hit) (item 0 hit) 2) ]
+  ifelse random-float 1 < 0.7
+    [ report (list "ENHANCE" 0 -1 2) ]
+    [ report (list "ENHANCE" 1 -1 2) ]
+end
+
+to-report decide-ai
+  if share 1 3 > concentration-threshold [
+    let hit hottest (list (list 2 0))
+    if not empty? hit [ report (list "CHECK" (item 1 hit) (item 0 hit) 3) ]
+  ]
+  ifelse random-float 1 < 0.5
+    [ report (list "ENHANCE" 1 -1 3) ]
+    [ report (list "ENHANCE" 2 -1 3) ]
+end
+
+;; ================================================================== resolve
+
+to resolve [ act ]
+  let kind item 0 act
+  let m item 1 act
+  let tgt item 2 act
+  let mover item 3 act
+
+  if kind = "ABSTAIN" [ stop ]
+
+  ifelse kind = "ENHANCE" [
+    ;; One ENHANCE is worth one CHECK against an average opponent, so the two
+    ;; action types are comparable. Three donors with four actors.
+    let scale 1 / 3
+    foreach [0 1 2 3] [ d ->
+      if d != mover [ transfer m d mover (enhance-magnitude * scale * share m d) ]
+    ]
+  ] [
+    let cs (share m mover) * (item mover legitimacy)
+    let ts (share m tgt) * (item tgt legitimacy)
+    let den cs + ts
+    let p 0.5
+    if den > 0 [ set p cs / den ]
+    set checks-against replace-item tgt checks-against ((item tgt checks-against) + 1)
+    if random-float 1 < p [
+      transfer m tgt mover ((check-ratio * enhance-magnitude) * share m tgt)
+    ]
+  ]
+end
+
+;; ================================================================ diffusion
+
+to diffuse-power
+  if diffusion-scale <= 0 [ stop ]
+  ask patches [
+    let result power
+    foreach range 5 [ m ->
+      let rate diffusion-scale * item m diffusion-rates
+      if rate > 0 [
+        let row item m power
+        let blended n-values 4 [ a ->
+          (1 - rate) * (item a row) + rate * (mean [ item a (item m power) ] of neighbors4)
+        ]
+        set result replace-item m result blended
+      ]
+    ]
+    set new-power result
+  ]
+  ask patches [ set power new-power ]
+end
+
+;; ==================================================================== shock
+
+to maybe-shock
+  if random-float 1 < shock-probability [
+    let s one-of shock-list
+    let m item 0 s
+    let up item 1 s
+    let down item 2 s
+    ask one-of patches [
+      transfer m down up (shock-magnitude * share m down)
+    ]
+  ]
+end
+
+;; ================================================================== display
+
+to recolour
+  let m position display-modality modality-names
+  ask patches [
+    let row item m power
+    let top 0
+    let best item 0 row
+    foreach range 4 [ a ->
+      if item a row > best [
+        set best item a row
+        set top a
+      ]
+    ]
+    ;; A pale tint of the dominant actor's colour, darker the stronger its
+    ;; hold, so the black icon on top stays readable.
+    set pcolor scale-color (actor-colour top) best 2.4 0.4
+    ask markers-here [
+      set shape actor-shape top
+      set size 0.45 + 0.6 * best
+    ]
+  ]
+end
+
+to-report actor-colour [ a ]
+  report item a (list blue orange green violet)
+end
+
+to-report actor-shape [ a ]
+  report item a ["person" "gavel" "dollar" "robot"]
+end
+
+;; ================================================================== metrics
+
+;; 1.0 means this modality looks the same in every locality; lower means it
+;; is regionally lumpy. This is the model's central prediction: the fast
+;; modalities should flatten, the jurisdiction-bound ones should not.
+to-report spread-of [ m ]
+  let total 0
+  let counted 0
+  foreach range 4 [ a ->
+    let xs ([ item a (item m power) ] of patches)
+    let mu mean xs
+    if mu > 0.000001 [
+      let v 1 - (standard-deviation xs) / mu
+      if v < 0 [ set v 0 ]
+      set total total + v
+      set counted counted + 1
+    ]
+  ]
+  ifelse counted > 0
+    [ report total / counted ]
+    [ report 1 ]
+end
+
+to-report grid-mean [ m a ]
+  report mean [ item a (item m power) ] of patches
+end
+
+to-report mean-share [ a ]
+  let total 0
+  foreach range 5 [ m ->
+    set total total + (grid-mean m a)
+  ]
+  report total / 5
+end
+
+to-report local-hhi
+  report mean [ mean (map [ row -> sum (map [ v -> v * v ] row) ] power) ] of patches
+end
+
+;; ---- the paper's Aspiration-Stability matrix, Table 8 ----------------------
+;; Both are computed on the grid-averaged matrix, so they are comparable with
+;; the aggregate Python model.
+
+to-report clamp01 [ x ]
+  if x < 0 [ report 0 ]
+  if x > 1 [ report 1 ]
+  report x
+end
+
+;; People's share, scaled so an even split among four actors reads 0.5.
+to-report aspiration
+  report clamp01 ((mean-share 0) / 0.5)
+end
+
+;; How unconcentrated power is: 1 an even split, 0 one actor holding all.
+to-report stability
+  let even 0.25
+  let total 0
+  foreach range 5 [ m ->
+    let h 0
+    foreach range 4 [ a ->
+      let v grid-mean m a
+      set h h + (v * v)
+    ]
+    set total total + (1 - (h - even) / (1 - even))
+  ]
+  report clamp01 (total / 5)
+end
+
+to-report quadrant-name
+  ifelse stability >= 0.5 [
+    ifelse aspiration >= 0.5
+      [ report "II High Potential" ]
+      [ report "I Surviving not Thriving" ]
+  ] [
+    ifelse aspiration >= 0.5
+      [ report "III Creative Chaos" ]
+      [ report "IV Fragile Collapse" ]
+  ]
+end
+
+;; Draw the quadrant dividers once, so the scatter has the Table 8 grid
+;; behind it.
+to draw-quadrants
+  set-current-plot "Aspiration-Stability"
+  set-current-plot-pen "divider"
+  plot-pen-up
+  plotxy 0.5 0
+  plot-pen-down
+  plotxy 0.5 1
+  plot-pen-up
+  plotxy 0 0.5
+  plot-pen-down
+  plotxy 1 0.5
+  plot-pen-up
+end]]></code>
+  <widgets>
+    <view x="395" wrappingAllowedX="true" y="41" frameRate="30.0" minPycor="-8" height="423" showTickCounter="true" patchSize="24.65" fontSize="10" wrappingAllowedY="true" width="423" tickCounterLabel="ticks" maxPycor="8" updateMode="1" maxPxcor="8" minPxcor="-8"></view>
+    <monitor x="832" precision="3" y="318" height="60" fontSize="11" width="130" display="local HHI">local-hhi</monitor>
+    <monitor x="971" precision="3" y="318" height="60" fontSize="11" width="222" display="checks received">checks-against</monitor>
+    <monitor x="832" precision="17" y="249" height="60" fontSize="11" width="360" display="quadrant">quadrant-name</monitor>
+    <monitor x="1015" precision="3" y="179" height="60" fontSize="11" width="174" display="stability">stability</monitor>
+    <monitor x="1015" precision="3" y="109" height="60" fontSize="11" width="172" display="AI hold">mean-share 3</monitor>
+    <monitor x="832" precision="3" y="111" height="60" fontSize="11" width="173" display="Enterprises hold">mean-share 2</monitor>
+    <monitor x="832" precision="3" y="179" height="60" fontSize="11" width="173" display="aspiration">aspiration</monitor>
+    <monitor x="832" precision="3" y="41" height="60" fontSize="11" width="171" display="People hold">mean-share 0</monitor>
+    <monitor x="1013" precision="3" y="41" height="60" fontSize="11" width="171" display="State hold">mean-share 1</monitor>
+    <button x="294" y="43" height="76" disableUntilTicks="false" forever="true" kind="Observer" width="88">go</button>
+    <button x="198" y="42" height="77" disableUntilTicks="false" forever="false" kind="Observer" width="88" display="go once">go</button>
+    <button x="105" y="42" height="76" disableUntilTicks="false" forever="false" kind="Observer" width="85">setup</button>
+    <slider x="103" step="0.05" y="126" max="1.5" width="280" display="heterogeneity" height="50" min="0" direction="Horizontal" default="0.6" variable="heterogeneity"></slider>
+    <slider x="103" step="0.1" y="184" max="2" width="280" display="diffusion-scale" height="50" min="0" direction="Horizontal" default="0.8" variable="diffusion-scale"></slider>
+    <slider x="102" step="0.25" y="242" max="6" width="280" display="check-ratio" height="50" min="0.5" direction="Horizontal" default="1.0" variable="check-ratio"></slider>
+    <slider x="101" step="0.01" y="300" max="0.3" width="280" display="enhance-magnitude" height="50" min="0.02" direction="Horizontal" default="0.1" variable="enhance-magnitude"></slider>
+    <slider x="101" step="0.05" y="358" max="0.6" width="280" display="shock-probability" height="50" min="0" direction="Horizontal" default="0.15" variable="shock-probability"></slider>
+    <slider x="100" step="0.01" y="415" max="0.3" width="280" display="shock-magnitude" height="50" min="0.02" direction="Horizontal" default="0.1" variable="shock-magnitude"></slider>
+    <slider x="100" step="0.05" y="471" max="0.8" width="280" display="concentration-threshold" height="50" min="0.2" direction="Horizontal" default="0.45" variable="concentration-threshold"></slider>
+    <slider x="100" step="10" y="529" max="300" width="280" display="max-ticks" height="50" min="10" direction="Horizontal" default="100.0" variable="max-ticks"></slider>
+    <switch x="100" y="587" height="40" on="false" variable="uniform-diffusion?" width="280" display="uniform-diffusion?"></switch>
+    <chooser x="99" y="636" height="60" variable="display-modality" current="4" width="280" display="display-modality">
+      <choice type="string" value="Economic"></choice>
+      <choice type="string" value="Epistemic"></choice>
+      <choice type="string" value="Narrative"></choice>
+      <choice type="string" value="Authoritative"></choice>
+      <choice type="string" value="Physical"></choice>
+    </chooser>
+    <plot x="394" autoPlotX="false" yMax="1.0" autoPlotY="false" yAxis="stability" y="475" xMin="0.0" height="218" legend="true" xMax="1.0" yMin="0.0" width="422" xAxis="aspiration" display="Aspiration-Stability">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="divider" color="-7500403" legend="true">
+        <setup></setup>
+        <update></update>
+      </pen>
+      <pen interval="1.0" mode="0" display="path" color="-13345367" legend="true">
+        <setup></setup>
+        <update>plotxy aspiration stability</update>
+      </pen>
+      <pen interval="1.0" mode="2" display="now" color="-2674135" legend="true">
+        <setup></setup>
+        <update>plot-pen-reset plotxy aspiration stability</update>
+      </pen>
+    </plot>
+    <plot x="830" autoPlotX="true" yMax="1.0" autoPlotY="true" yAxis="same everywhere = 1" y="387" xMin="0.0" height="306" legend="true" xMax="50.0" yMin="0.0" width="363" xAxis="tick" display="Regional structure by modality">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="Economic" color="-955883" legend="true">
+        <setup></setup>
+        <update>plot spread-of 0</update>
+      </pen>
+      <pen interval="1.0" mode="0" display="Epistemic" color="-13345367" legend="true">
+        <setup></setup>
+        <update>plot spread-of 1</update>
+      </pen>
+      <pen interval="1.0" mode="0" display="Narrative" color="-8630108" legend="true">
+        <setup></setup>
+        <update>plot spread-of 2</update>
+      </pen>
+      <pen interval="1.0" mode="0" display="Authoritative" color="-10899396" legend="true">
+        <setup></setup>
+        <update>plot spread-of 3</update>
+      </pen>
+      <pen interval="1.0" mode="0" display="Physical" color="-2674135" legend="true">
+        <setup></setup>
+        <update>plot spread-of 4</update>
+      </pen>
+    </plot>
+  </widgets>
+  <info># Digital Gorilla, spatial version
+
+Each patch is a locality with its own power matrix: four actors across five
+modalities (economic, epistemic, narrative, authoritative, physical). Every
+modality's four shares sum to 1 within a locality.
+
+## Reading the map
+
+The icon on each patch is whoever holds the most of the modality chosen in
+`display-modality`:
+
+    figure    People
+    gavel     the State
+    dollar    Enterprises
+    robot     AI
+
+The patch behind it is a tint of that actor's colour, darker the stronger its
+hold, and the icon grows with it. A region of robots means AI is dominant
+there; a jumble of different icons means nobody is.
+
+## What it does
+
+Each tick, inside every locality:
+
+1. The four actors each choose ENHANCE, CHECK or ABSTAIN using the rules from
+   Table 6. A CHECK succeeds with a probability set by the two actors'
+   legitimacy-weighted power.
+2. Power diffuses to the four neighbouring localities, at a rate that depends
+   on the modality.
+3. With probability `shock-probability` one Table 7 shock hits one locality,
+   moving `shock-magnitude` of the disfavoured actor's share there.
+
+## The point
+
+The modalities do not travel equally well. Epistemic and narrative power cross
+a border at no cost: a model, a dataset or a piece of synthetic media is
+everywhere at once. Authoritative and physical power stop at the edge of the
+jurisdiction that grants them: courts, police and infrastructure are fixed.
+Economic power is in between.
+
+So the diffusion rates are 0.30 for epistemic and narrative, 0.15 for
+economic, 0.05 for authoritative and 0.03 for physical.
+
+The prediction is that regional structure survives in the jurisdiction-bound
+modalities and washes out in the informational ones. Set `display-modality` to
+Physical and you should see distinct regions; switch it to Narrative and the
+map should go flat.
+
+## The Aspiration-Stability plot
+
+The paper's Table 8 matrix. Aspiration is People's share scaled so an even
+split reads 0.5; stability is how unconcentrated power is, from the
+Herfindahl-Hirschman index. The grey cross marks the 0.5 lines, the blue line
+is the path the run has taken and the red dot is where it is now.
+
+    top right      II  High Potential, the target
+    top left       I   Surviving not Thriving
+    bottom right   III Creative Chaos
+    bottom left    IV  Fragile Collapse
+
+Both are computed on the grid-averaged matrix, so they can be compared with
+the aggregate Python model.
+
+## The control
+
+Turn `uniform-diffusion?` on. Every modality then diffuses at 0.17, the mean
+of the five rates. If the pattern is produced by the differential rates it has
+to disappear. In the Python version it does, and the ordering reverses.
+
+## What was predicted and did not happen
+
+The model was also built to test whether diffusion lets an actor escape
+checks, by spreading out until it is nowhere locally dominant. It does not.
+Diffusion equalises an actor's share across localities without lowering it, so
+an actor above the threshold everywhere is still checked everywhere.
+
+## Things to try
+
+- Raise `check-ratio` and watch the red dot climb towards quadrant II. Around
+  3 the balance changes.
+- Set `diffusion-scale` to 0 for a set of independent localities.
+- Set `heterogeneity` to 0 so every locality starts the same, and the grid
+  becomes many copies of one aggregate model.
+
+## Notes
+
+This model always runs four actors. The three-actor comparison, the parameter
+sweeps and the statistics are in the Python version in the same repository,
+which is the authoritative one; this model is for seeing the spatial pattern.
+
+Based on Parra-Orlandoni, Schnyder and Mallet, *The Digital Gorilla:
+Rebalancing Power in the Age of AI*.</info>
+  <turtleShapes>
+    <shape name="default" rotatable="true" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="5"></point>
+        <point x="40" y="250"></point>
+        <point x="150" y="205"></point>
+        <point x="260" y="250"></point>
+      </polygon>
+    </shape>
+    <shape name="circle" rotatable="false" editableColorIndex="0">
+      <circle x="0" y="0" marked="true" color="-1920102913" diameter="300" filled="true"></circle>
+    </shape>
+    <shape name="dollar" rotatable="false" editableColorIndex="0">
+      <rectangle endX="165" startY="30" marked="true" color="-1920102913" endY="270" startX="135" filled="true"></rectangle>
+      <rectangle endX="210" startY="60" marked="true" color="-1920102913" endY="90" startX="90" filled="true"></rectangle>
+      <rectangle endX="120" startY="60" marked="true" color="-1920102913" endY="150" startX="90" filled="true"></rectangle>
+      <rectangle endX="210" startY="135" marked="true" color="-1920102913" endY="165" startX="90" filled="true"></rectangle>
+      <rectangle endX="210" startY="150" marked="true" color="-1920102913" endY="240" startX="180" filled="true"></rectangle>
+      <rectangle endX="210" startY="210" marked="true" color="-1920102913" endY="240" startX="90" filled="true"></rectangle>
+    </shape>
+    <shape name="gavel" rotatable="false" editableColorIndex="0">
+      <rectangle endX="180" startY="45" marked="true" color="-1920102913" endY="120" startX="45" filled="true"></rectangle>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="105"></point>
+        <point x="255" y="210"></point>
+        <point x="225" y="240"></point>
+        <point x="120" y="135"></point>
+      </polygon>
+      <rectangle endX="240" startY="255" marked="true" color="-1920102913" endY="285" startX="60" filled="true"></rectangle>
+    </shape>
+    <shape name="person" rotatable="false" editableColorIndex="0">
+      <circle x="110" y="5" marked="true" color="-1920102913" diameter="80" filled="true"></circle>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="105" y="90"></point>
+        <point x="120" y="195"></point>
+        <point x="90" y="285"></point>
+        <point x="105" y="300"></point>
+        <point x="135" y="300"></point>
+        <point x="150" y="225"></point>
+        <point x="165" y="300"></point>
+        <point x="195" y="300"></point>
+        <point x="210" y="285"></point>
+        <point x="180" y="195"></point>
+        <point x="195" y="90"></point>
+      </polygon>
+      <rectangle endX="172" startY="79" marked="true" color="-1920102913" endY="94" startX="127" filled="true"></rectangle>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="195" y="90"></point>
+        <point x="240" y="150"></point>
+        <point x="225" y="180"></point>
+        <point x="165" y="105"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="105" y="90"></point>
+        <point x="60" y="150"></point>
+        <point x="75" y="180"></point>
+        <point x="135" y="105"></point>
+      </polygon>
+    </shape>
+    <shape name="robot" rotatable="false" editableColorIndex="0">
+      <circle x="135" y="15" marked="true" color="-1920102913" diameter="30" filled="true"></circle>
+      <rectangle endX="156" startY="45" marked="true" color="-1920102913" endY="78" startX="144" filled="true"></rectangle>
+      <rectangle endX="210" startY="75" marked="true" color="-1920102913" endY="165" startX="90" filled="true"></rectangle>
+      <rectangle endX="138" startY="100" marked="false" color="255" endY="126" startX="112" filled="true"></rectangle>
+      <rectangle endX="188" startY="100" marked="false" color="255" endY="126" startX="162" filled="true"></rectangle>
+      <rectangle endX="180" startY="141" marked="false" color="255" endY="153" startX="120" filled="true"></rectangle>
+      <rectangle endX="195" startY="180" marked="true" color="-1920102913" endY="258" startX="105" filled="true"></rectangle>
+      <rectangle endX="105" startY="186" marked="true" color="-1920102913" endY="231" startX="60" filled="true"></rectangle>
+      <rectangle endX="240" startY="186" marked="true" color="-1920102913" endY="231" startX="195" filled="true"></rectangle>
+    </shape>
+    <shape name="square" rotatable="false" editableColorIndex="0">
+      <rectangle endX="270" startY="30" marked="true" color="-1920102913" endY="270" startX="30" filled="true"></rectangle>
+    </shape>
+  </turtleShapes>
+  <linkShapes>
+    <shape name="default" curviness="0.0">
+      <lines>
+        <line x="-0.2" visible="false">
+          <dash value="0.0"></dash>
+          <dash value="1.0"></dash>
+        </line>
+        <line x="0.0" visible="true">
+          <dash value="1.0"></dash>
+          <dash value="0.0"></dash>
+        </line>
+        <line x="0.2" visible="false">
+          <dash value="0.0"></dash>
+          <dash value="1.0"></dash>
+        </line>
+      </lines>
+      <indicator>
+        <shape name="link direction" rotatable="true" editableColorIndex="0">
+          <line endX="90" startY="150" marked="true" color="-1920102913" endY="180" startX="150"></line>
+          <line endX="210" startY="150" marked="true" color="-1920102913" endY="180" startX="150"></line>
+        </shape>
+      </indicator>
+    </shape>
+  </linkShapes>
+  <previewCommands>setup repeat 75 [ go ]</previewCommands>
+  <experiments>
+    <experiment name="spread-by-modality" repetitions="10" sequentialRunOrder="true" runMetricsEveryStep="false" timeLimit="50">
+      <setup>setup</setup>
+      <go>go</go>
+      <metrics>
+        <metric>spread-of 0</metric>
+        <metric>spread-of 1</metric>
+        <metric>spread-of 2</metric>
+        <metric>spread-of 3</metric>
+        <metric>spread-of 4</metric>
+        <metric>aspiration</metric>
+        <metric>stability</metric>
+      </metrics>
+      <constants>
+        <enumeratedValueSet variable="uniform-diffusion?">
+          <value value="false"></value>
+          <value value="true"></value>
+        </enumeratedValueSet>
+      </constants>
+    </experiment>
+    <experiment name="aggregate-baseline" repetitions="10" sequentialRunOrder="true" runMetricsEveryStep="false" timeLimit="50">
+      <setup>setup</setup>
+      <go>go</go>
+      <metrics>
+        <metric>aspiration</metric>
+        <metric>stability</metric>
+        <metric>quadrant-name</metric>
+        <metric>mean-share 0</metric>
+        <metric>mean-share 1</metric>
+        <metric>mean-share 2</metric>
+        <metric>mean-share 3</metric>
+        <metric>item 0 checks-against</metric>
+      </metrics>
+      <constants>
+        <enumeratedValueSet variable="heterogeneity">
+          <value value="0"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="diffusion-scale">
+          <value value="0"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="check-ratio">
+          <value value="1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="enhance-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-probability">
+          <value value="0"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="concentration-threshold">
+          <value value="0.45"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="max-ticks">
+          <value value="50"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="uniform-diffusion?">
+          <value value="false"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="display-modality">
+          <value value="&quot;Physical&quot;"></value>
+        </enumeratedValueSet>
+      </constants>
+    </experiment>
+    <experiment name="threshold-aggregate" repetitions="10" sequentialRunOrder="true" runMetricsEveryStep="false" timeLimit="50">
+      <setup>setup</setup>
+      <go>go</go>
+      <metrics>
+        <metric>aspiration</metric>
+        <metric>stability</metric>
+        <metric>quadrant-name</metric>
+        <metric>mean-share 0</metric>
+        <metric>mean-share 1</metric>
+        <metric>mean-share 2</metric>
+        <metric>mean-share 3</metric>
+        <metric>item 0 checks-against</metric>
+      </metrics>
+      <constants>
+        <enumeratedValueSet variable="heterogeneity">
+          <value value="0"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="diffusion-scale">
+          <value value="0"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="check-ratio">
+          <value value="1"></value>
+          <value value="2"></value>
+          <value value="2.5"></value>
+          <value value="3"></value>
+          <value value="3.5"></value>
+          <value value="4"></value>
+          <value value="5"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="enhance-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-probability">
+          <value value="0"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="concentration-threshold">
+          <value value="0.45"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="max-ticks">
+          <value value="50"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="uniform-diffusion?">
+          <value value="false"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="display-modality">
+          <value value="&quot;Physical&quot;"></value>
+        </enumeratedValueSet>
+      </constants>
+    </experiment>
+    <experiment name="threshold-spatial" repetitions="10" sequentialRunOrder="true" runMetricsEveryStep="false" timeLimit="50">
+      <setup>setup</setup>
+      <go>go</go>
+      <metrics>
+        <metric>aspiration</metric>
+        <metric>stability</metric>
+        <metric>quadrant-name</metric>
+        <metric>mean-share 0</metric>
+        <metric>mean-share 1</metric>
+        <metric>mean-share 2</metric>
+        <metric>mean-share 3</metric>
+        <metric>item 0 checks-against</metric>
+      </metrics>
+      <constants>
+        <enumeratedValueSet variable="heterogeneity">
+          <value value="0.6"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="diffusion-scale">
+          <value value="1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="check-ratio">
+          <value value="1"></value>
+          <value value="2"></value>
+          <value value="2.5"></value>
+          <value value="3"></value>
+          <value value="3.5"></value>
+          <value value="4"></value>
+          <value value="5"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="enhance-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-probability">
+          <value value="0"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="concentration-threshold">
+          <value value="0.45"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="max-ticks">
+          <value value="50"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="uniform-diffusion?">
+          <value value="false"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="display-modality">
+          <value value="&quot;Physical&quot;"></value>
+        </enumeratedValueSet>
+      </constants>
+    </experiment>
+    <experiment name="spread-by-modality-pinned" repetitions="10" sequentialRunOrder="true" runMetricsEveryStep="false" timeLimit="50">
+      <setup>setup</setup>
+      <go>go</go>
+      <metrics>
+        <metric>spread-of 0</metric>
+        <metric>spread-of 1</metric>
+        <metric>spread-of 2</metric>
+        <metric>spread-of 3</metric>
+        <metric>spread-of 4</metric>
+        <metric>aspiration</metric>
+        <metric>stability</metric>
+      </metrics>
+      <constants>
+        <enumeratedValueSet variable="heterogeneity">
+          <value value="0.6"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="diffusion-scale">
+          <value value="1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="check-ratio">
+          <value value="1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="enhance-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-probability">
+          <value value="0.15"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="concentration-threshold">
+          <value value="0.45"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="max-ticks">
+          <value value="50"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="uniform-diffusion?">
+          <value value="false"></value>
+          <value value="true"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="display-modality">
+          <value value="&quot;Physical&quot;"></value>
+        </enumeratedValueSet>
+      </constants>
+    </experiment>
+    <experiment name="heterogeneity-sweep" repetitions="10" sequentialRunOrder="true" runMetricsEveryStep="false" timeLimit="50">
+      <setup>setup</setup>
+      <go>go</go>
+      <metrics>
+        <metric>spread-of 0</metric>
+        <metric>spread-of 1</metric>
+        <metric>spread-of 2</metric>
+        <metric>spread-of 3</metric>
+        <metric>spread-of 4</metric>
+        <metric>aspiration</metric>
+        <metric>stability</metric>
+      </metrics>
+      <constants>
+        <enumeratedValueSet variable="diffusion-scale">
+          <value value="1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="check-ratio">
+          <value value="1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="enhance-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-probability">
+          <value value="0.15"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="concentration-threshold">
+          <value value="0.45"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="max-ticks">
+          <value value="50"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="heterogeneity">
+          <value value="0"></value>
+          <value value="0.3"></value>
+          <value value="0.6"></value>
+          <value value="0.9"></value>
+          <value value="1.2"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="uniform-diffusion?">
+          <value value="false"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="display-modality">
+          <value value="&quot;Physical&quot;"></value>
+        </enumeratedValueSet>
+      </constants>
+    </experiment>
+    <experiment name="diffusion-escape" repetitions="10" sequentialRunOrder="true" runMetricsEveryStep="false" timeLimit="50">
+      <setup>setup</setup>
+      <go>go</go>
+      <metrics>
+        <metric>mean-share 0</metric>
+        <metric>mean-share 1</metric>
+        <metric>mean-share 2</metric>
+        <metric>mean-share 3</metric>
+        <metric>aspiration</metric>
+        <metric>stability</metric>
+      </metrics>
+      <constants>
+        <enumeratedValueSet variable="heterogeneity">
+          <value value="0.6"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="diffusion-scale">
+          <value value="0"></value>
+          <value value="1"></value>
+          <value value="2"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="check-ratio">
+          <value value="1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="enhance-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-probability">
+          <value value="0"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="concentration-threshold">
+          <value value="0.45"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="max-ticks">
+          <value value="50"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="uniform-diffusion?">
+          <value value="false"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="display-modality">
+          <value value="&quot;Physical&quot;"></value>
+        </enumeratedValueSet>
+      </constants>
+    </experiment>
+    <experiment name="settling" repetitions="5" sequentialRunOrder="true" runMetricsEveryStep="true" timeLimit="300">
+      <setup>setup</setup>
+      <go>go</go>
+      <metrics>
+        <metric>aspiration</metric>
+        <metric>stability</metric>
+      </metrics>
+      <constants>
+        <enumeratedValueSet variable="heterogeneity">
+          <value value="0.6"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="diffusion-scale">
+          <value value="1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="check-ratio">
+          <value value="1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="enhance-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-probability">
+          <value value="0.15"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="shock-magnitude">
+          <value value="0.1"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="concentration-threshold">
+          <value value="0.45"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="max-ticks">
+          <value value="300"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="uniform-diffusion?">
+          <value value="false"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="display-modality">
+          <value value="&quot;Physical&quot;"></value>
+        </enumeratedValueSet>
+      </constants>
+    </experiment>
+  </experiments>
+</model>
