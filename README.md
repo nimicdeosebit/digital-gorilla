@@ -1,7 +1,5 @@
 # The Digital Gorilla: an agent-based model
 
-Project 21, Design of Multi-Agent Systems, University of Groningen.
-
 An agent-based operationalisation of Parra-Orlandoni, Schnyder and Mallet,
 *The Digital Gorilla: Rebalancing Power in the Age of AI*. The framework
 describes power held across five modalities by four societal actors, and
