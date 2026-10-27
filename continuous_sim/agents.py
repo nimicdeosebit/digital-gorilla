@@ -19,9 +19,8 @@ import numpy as np
 from state import N, M, ACTORS, MODALITIES, PEOPLE, STATE, ENTERPRISE, AI
 from mechanisms import spillover
 
-# ---------------------------------------------------------------------------
 # EFFORT
-# ---------------------------------------------------------------------------
+
 # Each actor has institutional priorities -- where it naturally puts its
 # resources. These are read off the paper's account of who manifests power
 # where (Sec. 3.1.1, Table 4): People act through voice and consent, the State
@@ -53,9 +52,9 @@ def effort(P=None, rng=None, noise=0.0):
     return E / E.sum(axis=1, keepdims=True)
 
 
-# ---------------------------------------------------------------------------
+
 # CAPABILITY
-# ---------------------------------------------------------------------------
+
 def capability(P=None, t=0):
     """How effective each actor is in each modality: an N x M array.
 
