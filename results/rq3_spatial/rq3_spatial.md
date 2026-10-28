@@ -22,25 +22,45 @@ The control is the `uniform-diffusion?` switch, which sets every rate to 0.17.
 The rates are our numbers, so the pattern has to be shown to come from the
 differences between them rather than from the mechanism.
 
-## Status: not yet run
+## Configuration
 
-The experiment has never been run, so this question has no numbers. The model
-and the measure are both in place; what is missing is the run.
+BehaviorSpace `spread-by-modality-pinned`, 10 repetitions per switch setting, 50 ticks, all ten controls pinned in the experiment definition (heterogeneity 0.6, diffusion-scale 1.0, check-ratio 1.0, shocks 0.15).
 
-To produce them: BehaviorSpace experiment `spread-by-modality`, 10 repetitions,
-both settings of `uniform-diffusion?`, in NetLogo desktop — NetLogo Web has no
-BehaviorSpace. Average each `spread-of` column over the repetitions, separately
-for each switch setting, and the result is one uniformity value per modality
-with and without the control. Steps are in `NEXT_STEPS.md`.
+Data: `spread-by-modality-table.csv` 
 
-What it should show, if the claim holds: narrative and epistemic (rate 0.30)
-closest to 1.0, physical (0.03) lowest, and the differences between modalities
-largely disappearing once every rate is set to 0.17. If the ordering comes out
-otherwise, report that — a model that contradicts the prediction is a finding.
+Table: `python3 questions/rq3_spatial.py`
 
-If the run does not happen before submission, drop RQ3 to a demonstration: the
-model shows the mechanism and the view makes it visible, but no numerical claim
-is made.
+## Result
+
+| Modality | Rate | Rates differ | Uniform 0.17 | Change |
+|---|---|---|---|---|
+| Narrative | 0.30 | 0.956 +/- 0.004 | 0.939 | -0.017 |
+| Epistemic | 0.30 | 0.941 +/- 0.003 | 0.921 | -0.019 |
+| Authoritative | 0.05 | 0.881 +/- 0.006 | 0.940 | +0.059 |
+| Economic | 0.15 | 0.856 +/- 0.017 | 0.869 | +0.013 |
+| Physical | 0.03 | 0.803 +/- 0.007 | 0.934 | +0.131 |
+
+The gap between the most evenly distributed modalitly and the most regionally concentrated modality: 
+
+Our modality-specific rates: 0.956 − 0.803 = **0.153**
+Uniform 0.17 rates: 0.940 − 0.869 = **0.071**
+
+## How fast power travels decides how evenly it spreads
+
+Narrative and epistemic, the two fastest at 0.30, are the most evenly
+distributed. Physical, the slowest at 0.03, is the most regionally
+concentrated.
+
+The control shows the **rates** cause this. Setting all five to 0.17 more than
+halves the spread across modalities: physical gains +0.131, rising from
+lumpiest to near the top, while narrative and epistemic both fall once slowed.
+
+**Physical    rate** 0.03 → 0.17   sped up    →  0.803 → 0.934   *MORE* uniform  (+0.131)
+**Narrative   rate** 0.30 → 0.17   slowed     →  0.956 → 0.939   *LESS* uniform  (−0.017)
+
+Increasing the rate of the modality makes it more uniform. Reducing the rate makes it less uniform. The effect runs in both directions, which is what separates a result caused by the rates from one the diffusion mechanism would produce regardless of them.
+
+So the distinction RQ3 asks about, i.e., whether it matters that power spread thinly everywhere is different from power piled into a few places, is real and measurable. Different kinds of power end up differently distributed across the grid.
 
 ## Why the ordering of the rates is defensible
 

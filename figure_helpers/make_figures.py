@@ -87,6 +87,59 @@ def fig_actor_count(fname="fig7_actor_count.png"):
     save(fig, fname)
 
 
+THRESHOLD = Path(__file__).resolve().parent.parent / "results" / "netlogo_threshold"
+
+
+def read_behaviorspace(filename):
+    """One dict per run. BehaviorSpace writes six preamble lines above the header."""
+    with open(THRESHOLD / filename, newline="", encoding="utf-8") as fh:
+        rows = list(csv.reader(fh))
+    at = next(i for i, r in enumerate(rows) if r and r[0] == "[run number]")
+    return [dict(zip(rows[at], r)) for r in rows[at + 1:] if r]
+
+
+def fig_netlogo_threshold(fname="fig10_netlogo_threshold.png"):
+    """Does putting power in space change how strong a check has to be?
+
+    Items 3a and 3b of NEXT_STEPS.md. Aspiration has to pass 0.5 to reach the
+    High Potential quadrant. Error bars are one standard deviation over the ten
+    repetitions, the same spread the table in
+    results/netlogo_threshold/netlogo_threshold.md reports.
+    """
+    from statistics import mean, stdev
+
+    series = (
+        (BLUE, "o", "threshold-aggregate-table.csv", "grid off (aggregate)"),
+        (ORANGE, "s", "threshold-spatial-table.csv", "grid on (spatial)"),
+    )
+    fig, ax = plt.subplots(figsize=(5, 3))
+
+    # The flip happens somewhere in here; nothing was sampled inside it.
+    ax.axvspan(2.0, 2.5, color=GREY, alpha=0.35, lw=0)
+    ax.annotate("quadrant flips\nin here", xy=(2.25, 0.408), fontsize=7,
+                color="#666666", ha="center", va="bottom")
+
+    for colour, marker, path, label in series:
+        by_ratio = {}
+        for run in read_behaviorspace(path):
+            by_ratio.setdefault(float(run["check-ratio"]), []).append(
+                float(run["aspiration"]))
+        xs = sorted(by_ratio)
+        ys = [mean(by_ratio[x]) for x in xs]
+        es = [stdev(by_ratio[x]) for x in xs]
+        ax.errorbar(xs, ys, yerr=es, fmt=marker + "-", ms=4, lw=2,
+                    color=colour, capsize=2, label=label)
+
+    ax.axhline(0.5, color="#444444", ls="--", lw=1)
+    ax.annotate("High Potential above here", xy=(4.95, 0.505), fontsize=7,
+                color="#444444", ha="right", va="bottom")
+    ax.set(xlim=(0.8, 5.2), xlabel="check strength / enhance strength (check-ratio)",
+           ylabel="aspiration (People's share)")
+    ax.legend(frameon=False, fontsize=8, loc="lower right")
+    save(fig, fname)
+
+
 if __name__ == "__main__":
     fig_check_threshold()
     fig_actor_count()
+    fig_netlogo_threshold()
