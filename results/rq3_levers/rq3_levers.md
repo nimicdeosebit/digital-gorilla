@@ -83,7 +83,7 @@ People from 0.787 to 0.892 of an even share and High Potential from 0% to 16%,
 so the effect is monotone but never reaches the quadrant on its own.
 
 Figure: `figures/fig9_levers.png`. Code: `action_based_sim/levers.py`,
-`questions/rq4_levers.py`, `figure_helpers/figure_levers.py`.
+`questions/rq3_levers.py`, `figure_helpers/figure_levers.py`.
 
 ### A bug found by reading the result
 

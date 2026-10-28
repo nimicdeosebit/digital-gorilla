@@ -33,7 +33,7 @@ pip install -r requirements.txt
 python3 questions/baseline.py             # -> results/baseline/
 python3 questions/rq1_check_threshold.py  # -> results/rq1_check_threshold/
 python3 questions/rq2_three_vs_four.py    # prints; cached by the figure script
-python3 questions/rq4_levers.py           # -> results/rq4_levers/
+python3 questions/rq3_levers.py           # -> results/rq3_levers/
 
 python3 continuous_sim/plots.py              # figures 1-5
 python3 figure_helpers/make_figures.py       # figures 6-7

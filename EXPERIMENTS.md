@@ -18,17 +18,17 @@ The framework separates AI from Enterprises. Does that separation do any work,
 or is it the same system with one actor relabelled?
 → both Python models · [`results/rq2_three_vs_four/`](results/rq2_three_vs_four/rq2_three_vs_four.md)
 
-**RQ3 — Does it matter where power sits?**
+**RQ3 — Do the policy levers help?**
+The paper proposes interventions. Do they change who holds power, and can
+policy substitute for raw check strength?
+→ action model · [`results/rq3_levers/`](results/rq3_levers/rq3_levers.md)
+
+**RQ4 — Does it matter where power sits?**
 The aggregate models hold one number per kind of power, so power spread thinly
 everywhere looks identical to the same total piled into a few places. Do kinds
 of power that travel easily end up more evenly spread across localities than
 kinds that are bound to a place?
-→ NetLogo spatial model · [`results/rq3_spatial/`](results/rq3_spatial/rq3_spatial.md)
-
-**RQ4 — Do the policy levers help?**
-The paper proposes interventions. Do they change who holds power, and can
-policy substitute for raw check strength?
-→ action model · [`results/rq4_levers/`](results/rq4_levers/rq4_levers.md)
+→ NetLogo spatial model · [`results/rq4_spatial/`](results/rq4_spatial/rq4_spatial.md)
 
 ## Supporting runs
 

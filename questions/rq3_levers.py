@@ -34,7 +34,7 @@ from rq1_check_threshold import ci95, crossing_point, run_batch, summarise
 N_SEEDS = 200
 ENHANCE = 0.10
 RATIOS = (1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0)
-RESULTS = Path(__file__).resolve().parent.parent / "results" / "rq4_levers"
+RESULTS = Path(__file__).resolve().parent.parent / "results" / "rq3_levers"
 RESULTS.mkdir(parents=True, exist_ok=True)
 CACHE = RESULTS / "lever_cache.json"
 
@@ -167,7 +167,7 @@ def main():
             row = dict(row)
             row["label"] = label
             w.writerow(row)
-    print("wrote results/rq4_levers/lever_results.csv")
+    print("wrote results/rq3_levers/lever_results.csv")
 
 
 if __name__ == "__main__":

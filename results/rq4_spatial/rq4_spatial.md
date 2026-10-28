@@ -1,11 +1,11 @@
-# RQ3 — Does it matter where power sits?
+# RQ4 — Does it matter where power sits?
 
 ## The question
 
 The aggregate models hold one number per kind of power, so two worlds look
 identical to them: one where a kind of power is spread thinly and evenly
 everywhere, and one where the same total is piled into a few places. Those are
-not the same situation. RQ3 asks whether the distinction changes anything.
+not the same situation. RQ4 asks whether the distinction changes anything.
 
 ## Where it is answered
 
@@ -28,7 +28,7 @@ BehaviorSpace `spread-by-modality-pinned`, 10 repetitions per switch setting, 50
 
 Data: `spread-by-modality-table.csv` 
 
-Table: `python3 questions/rq3_spatial.py`
+Table: `python3 questions/rq4_spatial.py`
 
 ## Result
 
@@ -60,7 +60,7 @@ lumpiest to near the top, while narrative and epistemic both fall once slowed.
 
 Increasing the rate of the modality makes it more uniform. Reducing the rate makes it less uniform. The effect runs in both directions, which is what separates a result caused by the rates from one the diffusion mechanism would produce regardless of them.
 
-So the distinction RQ3 asks about, i.e., whether it matters that power spread thinly everywhere is different from power piled into a few places, is real and measurable. Different kinds of power end up differently distributed across the grid.
+So the distinction RQ4 asks about, i.e., whether it matters that power spread thinly everywhere is different from power piled into a few places, is real and measurable. Different kinds of power end up differently distributed across the grid.
 
 ## Why the ordering of the rates is defensible
 

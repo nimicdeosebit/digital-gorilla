@@ -53,8 +53,8 @@ it should and nowhere else.
 
 ## Not yet done
 
-The BehaviorSpace experiment `spread-by-modality` has never been run, so RQ3
-has no numbers yet. That run is independent of the agreement reported above:
-this check switches the spatial machinery off, RQ3 is what it is for.
+The BehaviorSpace experiment `spread-by-modality` has now been run, and RQ4's
+numbers come from it. That run is independent of the agreement reported above:
+this check switches the spatial machinery off, RQ4 is what it is for.
 
 NetLogo Web has no BehaviorSpace; that run needs NetLogo desktop.

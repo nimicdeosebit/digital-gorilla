@@ -23,7 +23,7 @@ with Python.
 
 Data: `threshold-aggregate-table.csv`, `threshold-spatial-table.csv`
 
-Table: `python3 questions/rq3_spatial.py`
+Table: `python3 questions/rq4_spatial.py`
 
 Figure: `figures/fig10_netlogo_threshold.png` 
 

@@ -27,7 +27,7 @@ from rq1_check_threshold import run_batch  # noqa: E402
 
 FIGDIR = Path(__file__).resolve().parent.parent / "figures"
 FIGDIR.mkdir(exist_ok=True)
-RESULTS = Path(__file__).resolve().parent.parent / "results" / "rq4_levers"
+RESULTS = Path(__file__).resolve().parent.parent / "results" / "rq3_levers"
 RESULTS.mkdir(parents=True, exist_ok=True)
 CACHE = RESULTS / "lever_cache.json"
 SHARES = RESULTS / "lever_shares.json"

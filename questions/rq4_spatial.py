@@ -1,4 +1,4 @@
-"""RQ3 and the rest of the NetLogo results.
+"""RQ4 and the rest of the NetLogo results.
 
 The NetLogo model is driven by hand through BehaviorSpace, so unlike the other
 question scripts this one does not run the simulation -- it reads the CSVs
@@ -9,12 +9,12 @@ Seven experiments, all defined inside `netlogo/digital_gorilla.nlogo`:
   aggregate-baseline        does NetLogo reproduce the Python action model?
   threshold-aggregate       does it reproduce the check-strength threshold?
   threshold-spatial         does space move that threshold?
-  spread-by-modality        RQ3: does it matter where power sits?
-  heterogeneity-sweep       does RQ3 survive a different starting inequality?
+  spread-by-modality        RQ4: does it matter where power sits?
+  heterogeneity-sweep       does RQ4 survive a different starting inequality?
   diffusion-escape          can an actor spread out to dodge checks?
   settling                  has the system settled by tick 50?
 
-Run from the repository root:  python3 questions/rq3_spatial.py
+Run from the repository root:  python3 questions/rq4_spatial.py
 """
 
 import csv
@@ -22,7 +22,7 @@ from pathlib import Path
 from statistics import mean, stdev
 
 RESULTS    = Path(__file__).resolve().parent.parent / "results"
-RQ3        = RESULTS / "rq3_spatial"
+RQ4        = RESULTS / "rq4_spatial"
 VALIDATION = RESULTS / "validation"
 THRESHOLD  = RESULTS / "netlogo_threshold"
 ROBUSTNESS = RESULTS / "robustness"
@@ -135,12 +135,12 @@ def threshold_comparison():
           "power to People\nwithout making the system more even overall.")
 
 
-# ------------------------------------------------------------- experiment E4 - spread by modality (RQ3)
+# ------------------------------------------------------------- experiment E4 - spread by modality (RQ4)
 def spread_by_modality():
-    """RQ3. Do kinds of power that travel freely end up more evenly spread?"""
-    runs = load(RQ3, "spread-by-modality-table.csv")
+    """RQ4. Do kinds of power that travel freely end up more evenly spread?"""
+    runs = load(RQ4, "spread-by-modality-table.csv")
     groups = group_by(runs, "uniform-diffusion?")
-    banner("E4  spread-by-modality -- RQ3")
+    banner("E4  spread-by-modality -- RQ4")
 
     header = (f"{'modality':<16}{'rate':>6}{'rates differ':>21}"
               f"{'uniform 0.17':>14}{'change':>10}")
@@ -175,9 +175,9 @@ def spread_by_modality():
 
 # ------------------------------------------------------------- experiment E5 - heterogeneity sweep
 def heterogeneity_sweep():
-    """Does the RQ3 result depend on how unequal the localities start?"""
-    groups = group_by(load(RQ3, "heterogeneity-sweep-table.csv"), "heterogeneity", float)
-    banner("E5  heterogeneity-sweep -- robustness of RQ3")
+    """Does the RQ4 result depend on how unequal the localities start?"""
+    groups = group_by(load(RQ4, "heterogeneity-sweep-table.csv"), "heterogeneity", float)
+    banner("E5  heterogeneity-sweep -- robustness of RQ4")
 
     header = f"{'het':>6}" + "".join(f"{n[:9]:>12}" for n, _ in MODALITIES) + f"{'range':>9}"
     print(header)

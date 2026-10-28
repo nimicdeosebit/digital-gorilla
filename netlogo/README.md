@@ -1,8 +1,8 @@
 # The spatial model
 
 `digital_gorilla.nlogo` — the action model run on a grid, so that power has a
-place as well as a size. This is where **RQ3** is answered: does it matter
-where power sits? See `results/rq3_spatial/rq3_spatial.md`.
+place as well as a size. This is where **RQ4** is answered: does it matter
+where power sits? See `results/rq4_spatial/rq4_spatial.md`.
 
 ## Running it
 
@@ -132,8 +132,10 @@ order of averaging.
 
 The write-up is in `results/validation/netlogo_cross_check.md`.
 
-## Still outstanding
+## The experiments that have been run
 
-The BehaviorSpace experiment `spread-by-modality` (10 repetitions, both
-settings of `uniform-diffusion?`) has never been run, so RQ3 has no numbers
-yet. See `NEXT_STEPS.md`.
+Seven BehaviorSpace experiments are defined in the model file: an aggregate
+baseline, the check-strength threshold with and without the grid,
+spread-by-modality (RQ4), a heterogeneity sweep, a diffusion-escape test and a
+settling test. `python3 questions/rq4_spatial.py` reduces their CSV output to
+the tables in `results/`.

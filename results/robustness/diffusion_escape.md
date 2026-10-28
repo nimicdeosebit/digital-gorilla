@@ -14,7 +14,7 @@ concentration-threshold 0.45, uniform-diffusion? false.
 
 Data: `diffusion-escape-table.csv`
 
-Table: `python3 questions/rq3_spatial.py`
+Table: `python3 questions/rq4_spatial.py`
 
 ### Result
 

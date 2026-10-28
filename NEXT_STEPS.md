@@ -17,40 +17,12 @@ metric.
 Run it both ways and report. If aspiration barely moves, the result is robust;
 if it collapses, better we find out.
 
-## 2. Produce the RQ3 numbers from NetLogo -> check `results/rq3_spatial`
+## 2. NetLogo runs
 
-RQ3 has no numbers yet. The model is built and the measure is implemented —
-`spread-of`, which is 1 - (standard deviation / mean) across the 289
-localities, averaged over actors — but the experiment has never been run.
-
-What to do:
-
-1. Open `netlogo/digital_gorilla.nlogo` in NetLogo **desktop**. NetLogo Web
-   has no BehaviorSpace.
-2. Tools -> BehaviorSpace -> `spread-by-modality` -> Run, with table output.
-   It runs 10 repetitions at each setting of `uniform-diffusion?`, 50 ticks
-   each, logging `spread-of 0` through `spread-of 4` (economic, epistemic,
-   narrative, authoritative, physical) plus aspiration and stability.
-3. Save the CSV as `results/rq3_spatial/spread_by_modality.csv`.
-4. Average each `spread-of` column over the 10 repetitions, separately for
-   `uniform-diffusion?` false and true. That gives one uniformity value per
-   modality, with and without the control.
-5. Put the table into `results/rq3_spatial/rq3_spatial.md`.
-
-What it should show, if the claim holds: with modality-specific rates,
-narrative and epistemic (rate 0.30) come out closest to 1.0 and physical
-(0.03) lowest. With `uniform-diffusion?` on, every rate becomes 0.17 and the
-differences between modalities should largely disappear — that second run is
-what shows the pattern comes from the rates rather than from the mechanism.
-
-If the ordering does NOT come out that way, say so and report it. A spatial
-model that contradicts the prediction is a finding, not a failure.
-
-If nobody runs this before the deadline, drop RQ3 to a demonstration: the
-model shows the mechanism and the view makes it visible, but no numerical
-claim is made.
-
-## 3. NetLogo runs worth doing 
+Diya has run these: aggregate baseline, threshold with and without the grid,
+spread-by-modality (RQ4), heterogeneity sweep, diffusion escape, settling.
+`python3 questions/rq4_spatial.py` rebuilds every table from the CSVs. What is
+listed below is what each run was for, and what is left. 
 
 NetLogo Web has no BehaviorSpace, so anything needing repetitions must be run
 in NetLogo desktop. The monitors can be read by hand on either, and each patch
@@ -88,11 +60,11 @@ which no aggregate model can tell you, and would be the strongest argument for
 having built the spatial model at all. If it does not move, that is also worth
 reporting: the threshold is a property of the contest, not of the geography.
 
-### c. RQ3: spread by modality -> check `results/rq3_spatial`
+### c. RQ4: spread by modality -> check `results/rq4_spatial`
 
 BehaviorSpace, experiment `spread-by-modality`, 10 repetitions, both settings
 of `uniform-diffusion?`. This is what regenerates the numbers in
-`results/rq3_spatial/`.
+`results/rq4_spatial/`.
 
 ### d. The control, by hand -> https://docs.google.com/document/d/1iOd3UPx1ok26bfX96LDmdXgY8LNWvHWDreems6bDRwI/edit?usp=sharing 
 
@@ -120,7 +92,7 @@ state, and every number in the report needs that caveat.
 The `checks received` monitor reads `[0 ...]` for People. Confirm it stays zero
 across settings -- it is the visible symptom of item 1 above.
 
-## 4. Smaller
+## 3. Smaller
 
 - continuous_sim says "Enterprise", action_based_sim says "Enterprises".
 - All 48 mechanism weights are 1.0, so the mechanism draw has no numerical
