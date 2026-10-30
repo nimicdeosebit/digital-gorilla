@@ -1,12 +1,12 @@
 # The spatial model
 
-`digital_gorilla.nlogo` — the action model run on a grid, so that power has a
+`digital_gorilla.nlogox` — the action model run on a grid, so that power has a
 place as well as a size. This is where **RQ4** is answered: does it matter
 where power sits? See `results/rq4_spatial/rq4_spatial.md`.
 
 ## Running it
 
-Open it in NetLogo 6.4 (desktop) or drop it into netlogoweb.org. Press
+Open it in NetLogo 7 (desktop) or drop it into netlogoweb.org. Press
 `setup`, then `go`. It stops at `max-ticks`.
 
 NetLogo Web has no BehaviorSpace, so repeated-run experiments need the desktop

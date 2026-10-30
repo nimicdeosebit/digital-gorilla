@@ -27,6 +27,8 @@ Three files at the root carry the written record: [`EXPERIMENTS.md`](EXPERIMENTS
 
 ## Running it
 
+Python 3.10 or newer.
+
 ```bash
 pip install -r requirements.txt
 
@@ -34,12 +36,19 @@ python3 questions/baseline.py             # -> results/baseline/
 python3 questions/rq1_check_threshold.py  # -> results/rq1_check_threshold/
 python3 questions/rq2_three_vs_four.py    # prints; cached by the figure script
 python3 questions/rq3_levers.py           # -> results/rq3_levers/
+python3 questions/rq4_spatial.py          # reads the BehaviorSpace CSVs in results/rq4_spatial/
 
 python3 continuous_sim/plots.py              # figures 1-5
-python3 figure_helpers/make_figures.py       # figures 6-7
-python3 figure_helpers/figure_comparison.py  # figure 9
-python3 figure_helpers/figure_levers.py      # figure 10
+python3 figure_helpers/make_figures.py       # figures 6, 7 and 10
+python3 figure_helpers/figure_comparison.py  # figure 8
+python3 figure_helpers/figure_levers.py      # figure 9
 ```
+
+The spatial model is run by hand: open `netlogo/digital_gorilla.nlogox` in
+NetLogo 7, press `setup` then `go`. The seven BehaviorSpace experiments are
+defined inside the model file, and their output CSVs are already in
+`results/rq4_spatial/`, so `questions/rq4_spatial.py` reproduces the tables
+without re-running NetLogo.
 
 Scripts that sweep parameters cache their results (`*_cache.json`, now inside
 the matching results folder), so a figure redraws in seconds rather than

@@ -4,7 +4,7 @@ The NetLogo model is driven by hand through BehaviorSpace, so unlike the other
 question scripts this one does not run the simulation -- it reads the CSVs
 BehaviorSpace wrote and reduces them to the tables in the write-ups.
 
-Seven experiments, all defined inside `netlogo/digital_gorilla.nlogo`:
+Seven experiments, all defined inside `netlogo/digital_gorilla.nlogox`:
 
   aggregate-baseline        does NetLogo reproduce the Python action model?
   threshold-aggregate       does it reproduce the check-strength threshold?

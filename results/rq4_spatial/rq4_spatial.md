@@ -9,7 +9,7 @@ not the same situation. RQ4 asks whether the distinction changes anything.
 
 ## Where it is answered
 
-In the NetLogo model, `netlogo/digital_gorilla.nlogo` — 289 localities, each
+In the NetLogo model, `netlogo/digital_gorilla.nlogox` — 289 localities, each
 running the action model's rules on its own power matrix, with power leaking
 to neighbouring localities at a rate that depends on the kind of power.
 `netlogo/README.md` documents the mechanism and the controls.

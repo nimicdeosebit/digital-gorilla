@@ -7,7 +7,7 @@ checks in 50 ticks over 289 localities, because no actor's watchlist names
 People as a target.
 
   action_based_sim/policies.py   _state_policy, _enterprises_policy, _ai_policy
-  netlogo/digital_gorilla.nlogo  decide-state, decide-enterprises, decide-ai
+  netlogo/digital_gorilla.nlogox  decide-state, decide-enterprises, decide-ai
 
 The paper does list mechanisms running against People (law enforcement,
 surveillance, targeted marketing, manipulating choices); they sit unused in
